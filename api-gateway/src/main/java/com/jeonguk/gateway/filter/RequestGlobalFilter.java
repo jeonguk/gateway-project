@@ -6,13 +6,13 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
+import java.util.LinkedList;
 
 @Slf4j
 @Component
@@ -32,7 +32,9 @@ public class RequestGlobalFilter implements GlobalFilter, Ordered {
         log.info("HttpMethod {}", method);
 
         HttpHeaders headers = request.getHeaders();
-        headers.forEach((name, values) -> values.forEach(value -> log.info("HEAER name {}, value {}", name, value)));
+        //headers.forEach((name, values) -> values.forEach(value -> log.info("HEAER name {}, value {}", name, value)));
+
+        log.info("CLIENT SEND HEADER {}", headers.get("GATEWAY-HEADER-SEND"));
 
         return chain.filter(exchange);
     }
@@ -40,6 +42,10 @@ public class RequestGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public int getOrder() {
         return -200;
+    }
+
+    private static <K, V> void copyMultiValueMap(MultiValueMap<K,V> source, MultiValueMap<K,V> target) {
+        source.forEach((key, value) -> target.put(key, new LinkedList<>(value)));
     }
 
 }

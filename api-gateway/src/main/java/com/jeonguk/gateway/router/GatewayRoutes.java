@@ -1,4 +1,4 @@
-package com.jeonguk.gateway.config;
+package com.jeonguk.gateway.router;
 
 import com.jeonguk.gateway.filter.ElapsedFilter;
 import com.jeonguk.gateway.filter.SimpleLoggingFilter;
@@ -17,7 +17,11 @@ public class GatewayRoutes {
         return builder.routes()
                 .route("api_user",
                         r -> r.path("/api/user")
-                        .filters(f -> f.filter(new SimpleLoggingFilter()))
+                        .filters(f -> {
+                            f.filter(new SimpleLoggingFilter());
+                            f.addRequestHeader("HEADER-SEND", "SEND_HEADER");
+                            return f;
+                        })
                         .uri(API_SERVER_URI))
                 .route("api_hello",
                         r -> r.path("/api/hello")
