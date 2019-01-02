@@ -1,17 +1,24 @@
 package com.jeonguk.gateway.filter;
 
 import lombok.extern.slf4j.Slf4j;
+import org.reactivestreams.Publisher;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
 @Slf4j
@@ -36,7 +43,26 @@ public class RequestGlobalFilter implements GlobalFilter, Ordered {
 
         log.info("CLIENT SEND HEADER {}", headers.get("GATEWAY-HEADER-SEND"));
 
-        return chain.filter(exchange);
+        // Modification of the response body
+        ServerHttpResponse originalResponse = exchange.getResponse();
+        DataBufferFactory bufferFactory = originalResponse.bufferFactory();
+        ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(originalResponse) {
+            @Override
+            public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
+                if (body instanceof Flux) {
+                    Flux<? extends DataBuffer> fluxBody = (Flux<? extends DataBuffer>) body;
+                    return super.writeWith(fluxBody.map(dataBuffer -> {
+                        // probably should reuse buffers
+                        byte[] content = new byte[dataBuffer.readableByteCount()];
+                        dataBuffer.read(content);
+                        byte[] uppedContent = new String(content, StandardCharsets.UTF_8).toLowerCase().getBytes();
+                        return bufferFactory.wrap(uppedContent);
+                    }));
+                }
+                return super.writeWith(body); // if body is not a flux. never got there.
+            }
+        };
+        return chain.filter(exchange.mutate().response(decoratedResponse).build());
     }
 
     @Override

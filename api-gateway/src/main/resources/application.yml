@@ -1,6 +1,10 @@
 server:
   port: 8080
 
+spring:
+  application:
+    name: api-gateway
+
 logging:
   pattern:
     console: "%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger{36}.%M - %msg%n"
