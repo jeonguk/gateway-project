@@ -1,4 +1,4 @@
-package com.jeonguk.gateway.config;
+package com.jeonguk.api.config;
 
 import java.time.LocalDateTime;
 

@@ -21,13 +21,13 @@ import static java.time.LocalDateTime.now;
 @Getter
 public class HeaderInfoProviderImpl implements HeaderInfoProvider {
 
-    private final String userName;
+    private final String userNm;
     private final String authToken;
     private final LocalDateTime requestDateTime;
 
     @Autowired
     public HeaderInfoProviderImpl(ServerWebExchange exchange) {
-        this.userName = getHeader(exchange, AppHeader.USER_NM);
+        this.userNm = getHeader(exchange, AppHeader.USER_NM);
         this.authToken = getHeader(exchange, AppHeader.AUTO_TOKEN);
         this.requestDateTime = now();
     }
